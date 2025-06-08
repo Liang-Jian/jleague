@@ -1,7 +1,6 @@
+// src/config.rs
 use serde::Deserialize;
 use std::{fs, path::Path};
-use once_cell::sync::OnceCell;
-use anyhow::Result;
 
 #[derive(Debug, Deserialize)]
 pub struct ControlConfig {
@@ -32,20 +31,10 @@ pub struct Config {
     pub css: CssConfig,
 }
 
-static INSTANCE: OnceCell<Config> = OnceCell::new();
-
 impl Config {
-    /// 从 YAML 文件加载配置并储存为全局单例
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<&'static Config> {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let s = fs::read_to_string(path)?;
-        let cfg: Config = serde_yaml::from_str(&s)?;
-        INSTANCE.set(cfg)
-            .map_err(|_| anyhow::anyhow!("Config already initialized"))?;
-        Ok(INSTANCE.get().unwrap())
-    }
-
-    /// 获取全局配置引用
-    pub fn get() -> &'static Config {
-        INSTANCE.get().expect("Config not initialized")
+        let cfg = serde_yaml::from_str(&s)?;
+        Ok(cfg)
     }
 }
